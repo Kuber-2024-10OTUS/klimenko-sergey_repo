@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: init-demo2
+  namespace: homework
+  labels:
+    app: demo2
+spec:
+  selector:
+    matchLabels:
+      app: demo2
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+       maxSurge: 33%
+       maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: demo2
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: homework
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: nginx
+        image: nginx
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh","-c",'rm /homework/index.html']
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /homework/index.html
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: workdir
+          mountPath: /homework
+      # These containers are run during pod initialization
+      initContainers:
+      - name: install
+        image: busybox:1.28
+        command:
+        - wget
+        - "-O"
+        - "/init/index.html"
+        - http://info.cern.ch
+        volumeMounts:
+        - name: workdir
+          mountPath: /init
+      dnsPolicy: Default
+      volumes:
+      - name: workdir
+        emptyDir: {}
