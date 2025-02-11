@@ -94,6 +94,46 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir kubernetes-networks
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-networks
+    ```
+ - Написаны манифесты для создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**, сервиса - **service.yaml** и ингресса - **ingress.yaml**
+ - Добавлена метка ноды:
+    ```bash
+    kubectl label nodes <node_name> homework=true
+    ```
+
+## Как запустить проект:
+ - Выполнить команду создания пространства имен в директории **klimenko-sergey_repo/kubernetes-networks**:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выполнить команду запуска "деплоймента":
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+ - Выполнить команду поднятия сервиса:
+    ```bash
+    kubectl apply -f service.yaml
+    ```
+ - Выполнить команду применения ингресс правил:
+    ```bash
+    kubectl apply -f ingress.yaml
+    ```
+
+</details>
+
+---
+
+## ДЗ №4:
+
+<details><summary>Инструкция</summary>
+
 
 
 </details>
