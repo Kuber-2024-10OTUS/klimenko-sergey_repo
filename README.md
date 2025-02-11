@@ -45,9 +45,141 @@
 
 ---
 
-## ДЗ №1:
+## ДЗ №2:
 
 <details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir kubernetes-controllers
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-controllers
+    ```
+ - Написаны манифесты для создания пространства имен - **namespace.yaml** и запуска "деплоймента" - **deployment.yaml**
+ - Добавлена метка ноды:
+    ```bash
+    kubectl label nodes <node_name> homework=true
+    ```
+
+## Как запустить проект:
+ - Выполнить команду создания пространства имен в директории **klimenko-sergey_repo/kubernetes-controllers**:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выполнить команду запуска "деплоймента":
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+
+## Как проверить работоспособность:
+ - Проверить наличие статуса "Running" "подов", выполнив команду:
+    ```bash
+    kubectl get pods -n homework
+    ```
+ - Проверить наличие файла **index.html** в директории одного из "подов" **/homework**, выполнив команду:
+    ```bash
+    kubectl exec -ti -n homework <pod_name> -- bash
+    ```
+    ```bash
+    ls -la /homework
+    ```
+
+</details>
+
+---
+
+## ДЗ №3:
+
+<details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir kubernetes-networks
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-networks
+    ```
+ - Написаны манифесты для создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**, сервиса - **service.yaml** и ингресса - **ingress.yaml**
+ - Добавлена метка ноды:
+    ```bash
+    kubectl label nodes <node_name> homework=true
+    ```
+
+## Как запустить проект:
+ - Выполнить команду создания пространства имен в директории **klimenko-sergey_repo/kubernetes-networks**:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выполнить команду запуска "деплоймента":
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+ - Выполнить команду поднятия сервиса:
+    ```bash
+    kubectl apply -f service.yaml
+    ```
+ - Выполнить команду применения ингресс правил:
+    ```bash
+    kubectl apply -f ingress.yaml
+    ```
+
+</details>
+
+---
+
+## ДЗ №4:
+
+<details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir kubernetes-volumes
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-volumes
+    ```
+ - Написаны манифесты для: создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**,
+   сервиса - **service.yaml**, ингресса - **ingress.yaml**, объекта типа **configMap** - **cm.yaml**,
+   объекта типа **storageClass** - **storageClass.yaml**, запроса хранилища - **pvc.yaml**
+
+## Как запустить проект:
+ - Выполнить команду создания пространства имен в директории **klimenko-sergey_repo/kubernetes-volumes**:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выполнить команду для создания **storageClass**:
+    ```bash
+    kubectl apply -f storageClass.yaml
+    ```
+ - Выполнить команду для запроса хранилища:
+    ```bash
+    kubectl apply -f pvc.yaml
+    ```
+ - Выполнить команду запуска "деплоймента":
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+ - Выполнить команду поднятия сервиса:
+    ```bash
+    kubectl apply -f service.yaml
+    ```
+ - Выполнить команду применения ингресс правил:
+    ```bash
+    kubectl apply -f ingress.yaml
+    ```
+
+</details>
+
+---
+
+## ДЗ №5:
+
+<details><summary>Инструкция</summary>
+
 
 
 </details>
