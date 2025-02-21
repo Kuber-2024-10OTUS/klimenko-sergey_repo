@@ -180,6 +180,90 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir kubernetes-security
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-security
+    ```
+ - Написаны манифесты для: создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**,
+   сервиса - **service.yaml**, ингресса - **ingress.yaml**, объекта типа **configMap** - **cm.yaml**,
+   объекта типа **storageClass** - **storageClass.yaml**, запроса хранилища - **pvc.yaml**
+ - Написаны манифесты для создания сервисного аккаунта *monitoring* - **sa-monitoring.yaml**,
+   кластерной роли - **cluster-role.yaml**, кластерной связки - **cluster-role-binding.yaml**
+ - Написаны манифесты для создания сервисного аккаунта *cd* - **sa-cd.yaml**,
+   роли - **role-cd.yaml**, связки - **role-binding-cd.yaml**
+ - Создан **kubeconfig** для сервисного аккаунта *cd*, для этого:
+      - Написан манифест **token.yaml** для создания секрета, содержащего токен для сервисного аккаунта
+      - Получено значение токена
+      - Создан **kubeconfig** для сервисного аккаунта *cd* на основе существующего
+ - Произведено перемещение во вновь созданный контекст
+ - Сгенерирован для сервисного аккаунта *cd* токен с временем действия 1 день и сохранен в файл **token**
+
+## Как запустить проект:
+ - Выполнить команду создания пространства имен в директории **klimenko-sergey_repo/kubernetes-security**:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выполнить команду для создания **storageClass**:
+    ```bash
+    kubectl apply -f storageClass.yaml
+    ```
+ - Выполнить команду для запроса хранилища:
+    ```bash
+    kubectl apply -f pvc.yaml
+    ```
+ - Выполнить команду запуска "деплоймента":
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+ - Выполнить команду поднятия сервиса:
+    ```bash
+    kubectl apply -f service.yaml
+    ```
+ - Выполнить команду применения ингресс правил:
+    ```bash
+    kubectl apply -f ingress.yaml
+    ```
+ - Выполнить команду по подготовке к работе сервисного аккаунта *monitoring*:
+    ```bash
+    for i in sa-monitoring.yaml,cluster-role.yaml,cluster-role-binding.yaml; do kubectl apply -f $i; done
+    ```
+ - Выполнить команду по подготовке к работе сервисного аккаунта *cd*:
+    ```bash
+    for i in sa-cd.yaml,role-cd.yaml,role-binding-cd.yaml; do kubectl apply -f $i; done
+    ```
+ - Выполнить команду для создания секрета, содержащего токен для сервисного аккаунта *cd*:
+    ```bash
+    kubectl apply -f token.yaml
+    ```
+ - Получить значение токена, выполнив команду:
+    ```bash
+    kubectl get secret token-cd -n homework --template={{.data.token}} | base64 --decode
+    ```
+ - Скопировать существующий **kubeconfig** с последующим редактированием:
+    ```bash
+    kubectl config view > kubeconfig
+    ```
+ - Переключиться на вновь созданный контекст:
+    ```bash
+    kubectl config --kubeconfig=kubeconfig use-context my-context
+    ```
+ - Выполнить команду для генерации токена для сервисного аккаунта *cd*:
+    ```bash
+    kubectl --kubeconfig=kubeconfig -n homework create token cd --duration=24h
+    ```
+
+</details>
+
+---
+
+## ДЗ №6:
+
+<details><summary>Инструкция</summary>
+
 
 
 </details>

@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo5-rolebinding
+  namespace: homework
+subjects:
+- kind: ServiceAccount
+  name:  cd
+  namespace: homework
+  # apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: demo5-role
+  apiGroup: rbac.authorization.k8s.io
