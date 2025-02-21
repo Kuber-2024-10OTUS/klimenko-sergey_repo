@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo5
+  namespace: homework
+  labels:
+    app: demo5
+spec:
+  selector:
+    matchLabels:
+      app: demo5
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 33%
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: demo5
+    spec:
+      serviceAccountName: monitoring
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: homework
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: nginx
+          image: nginx
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CUSTOM_PORT
+              value: "8000"
+            - name: CUSTOM_ROOT
+              value: "/homework"
+            - name: TOKEN
+              value: "eyJhbGciOiJSUzI1NiIsImtpZCI6IndZUkpBNFR1YUhIWTdaQTR1RmJTNW9mU1lrZWFaZVlKdzB4c040XzhyNmcifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzQwODEyNTAzLCJpYXQiOjE3Mzk5NDg1MDMsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwianRpIjoiY2U4NWY3MDYtMDFhYy00OGNjLWI0ZWItNDRmNmNlMmFhMGFlIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJob21ld29yayIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJtb25pdG9yaW5nIiwidWlkIjoiMmM4NjMxNGYtZDQ0NC00YzQ1LTlmZDUtMjgyNGE3ZWZjMDlmIn19LCJuYmYiOjE3Mzk5NDg1MDMsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpob21ld29yazptb25pdG9yaW5nIn0.kw5-gJsyGfnaeaRvcTJ0OCrCJ7O4nxXhIsW5VCGuts8n6HUnSbKjTO9fQl9g2AauXL7-ZeLpwqh4m7V8vob5eVoJ4TXeX2RpUqjaXU3CCXL8YrQKISyLM70eCB0g0dnUFwonaaNXLDTV_ZUa4FNnJZDNaa9-qizw9_eFIPqBLXgQxACTeqz7ik7lcc1Q-UNNXFHB5o51AsgIX14c31D0Hz8nieHx-Aad65Kpi73YHu5ZWrsK9ONPQ2SmeOc-_fTUdDRMsbiNrPAAR68VH0JIxZRVgwxGTO-WOBqxNr4DbAm7Y1c7SIyUtmXKAd-xGQJHt6Bhsw_WLmolWnxC2nBzzg"
+            - name: CLUSTER_URL
+              value: "https://192.168.49.2:8443"
+          command: ["/bin/sh", "-c"]
+          args: [
+            "curl -X GET $(CLUSTER_URL)/apis/metrics.k8s.io/v1beta1/nodes/minikube --header 'Authorization: Bearer $(TOKEN)' --insecure >/homework/metrics.html 2>/dev/null && \
+            echo 'server { listen $(CUSTOM_PORT); location / { root $(CUSTOM_ROOT); try_files $uri $uri/ index index.html; } }' \
+            >> /etc/nginx/conf.d/default.conf && \
+            nginx -g 'daemon off;'"
+          ]
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", 'rm /homework/index.html /homework/metrics.html']
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: workdir
+              mountPath: /homework
+            - name: my-vol-cm
+              mountPath: "/homework/conf"
+              readOnly: true
+      # These containers are run during pod initialization
+      initContainers:
+        - name: install
+          image: busybox:1.28
+          command:
+            - wget
+            - "-O"
+            - "/init/index.html"
+            - http://info.cern.ch
+          volumeMounts:
+            - name: workdir
+              mountPath: /init
+      dnsPolicy: Default
+      volumes:
+        - name: workdir
+          persistentVolumeClaim:
+            claimName: demo5-pvc
+            readOnly: false
+        - name: my-vol-cm
+          configMap:
+            name: demo5-cm
+            items:
+              - key: "text.properties"
+                path: "file"

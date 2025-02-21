@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: demo5-role
+  namespace: homework
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+  # verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
