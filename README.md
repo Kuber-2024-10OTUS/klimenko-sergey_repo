@@ -264,6 +264,84 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir -p kubernetes-templating/hw6
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-templating/hw6
+    ```
+ - Создан Helm чарт, именуемый *hw6* и наполнен разлиными манифестами, заполнены файлы с переменными **Chart.yaml**, **values.yaml**:
+    ```bash
+    helm create hw6
+    ```
+
+## Как запустить проект:
+# Задание №1:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Helm чартом:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-templating/hw6
+    ```
+ - Добавить чарт для разворачивания СУБД **redis**:
+    ```bash
+    helm pull oci://registry-1.docker.io/bitnamicharts/redis --untar --untardir ./charts/ --version 20.11.3
+    ```
+ - Развернуть чарт:
+    ```bash
+    helm install -n homework -f values.yaml demo-hw6 . --set lifecycle.enabled=false
+    ```
+ - Получить токен сервисного аккаунта *monitoring*:
+    ```bash
+    TOKEN=$(kubectl get secret demo-hw6 -n homework --template={{.data.token}} | base64 --decode)
+    ```
+ - Назначить токен переменной *SA_token* в файле *values.yaml*:
+    ```bash
+    sed -i "s/^SA_token.*/SA_token: $TOKEN/" values.yaml
+    ```
+ - Запустить обновление чарта для получения страницы с метриками ноды:
+    ```bash
+    helm upgrade -n homework -f values.yaml demo-hw6 .
+    ```
+
+# Задание №2:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с манифестом *helmfile.yaml*:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-templating
+    ```
+ - Установить **helmfile**:
+     ```bash
+    wget https://github.com/helmfile/helmfile/releases/download/v1.0.0-rc.11/helmfile_1.0.0-rc.11_linux_amd64.tar.gz
+    ```
+    ```bash
+    tar -zxvf helmfile_1.0.0-rc.11_linux_amd64.tar.gz
+    ```
+    ```bash
+    sudo mv helmfile /usr/local/bin/
+    ```
+ - Подготовить к работе **helmfile**, установить необходимые плагины:
+    ```bash
+    helmfile init
+    ```
+ - Запустить разворачивание **Kafka**:
+    ```bash
+    helmfile apply
+    ```
+
+</details>
+
+---
+
+## ДЗ №7:
+
+<details><summary>Инструкция</summary>
+
 
 
 </details>
