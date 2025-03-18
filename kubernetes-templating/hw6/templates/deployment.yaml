@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hw6.fullname" . }}
+  labels:
+    {{- include "hw6.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "hw6.selectorLabels" . | nindent 6 }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 33%
+      maxUnavailable: 33%
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "hw6.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "hw6.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}-nginx
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "mainline" }}
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          env:
+            - name: CUSTOM_PORT
+              value: {{ .Values.service.env_targetPort | quote }}
+            - name: CUSTOM_ROOT
+              value: {{ .Values.nginx_custom_root | quote }}
+            - name: TOKEN
+              value: {{ .Values.SA_token | quote }}
+            - name: CLUSTER_URL
+              value: {{ .Values.cluster_url | quote }}
+          command: ["/bin/sh", "-c"]
+          args: [
+            "curl -X GET $(CLUSTER_URL)/apis/metrics.k8s.io/v1beta1/nodes/minikube --header 'Authorization: Bearer $(TOKEN)' --insecure >/homework/metrics.html 2>/dev/null && \
+            echo 'server { listen $(CUSTOM_PORT); location / { root $(CUSTOM_ROOT); try_files $uri $uri/ index index.html; } }' \
+            >> /etc/nginx/conf.d/default.conf && \
+            nginx -g 'daemon off;'"
+          ]
+          {{- if .Values.lifecycle.enabled }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.container.port }}
+          {{- if .Values.readinessProbe.enabled }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      # These containers are run during pod initialization
+      initContainers:
+        - name: {{ .Chart.Name }}-init
+          image: {{ .Values.init_image.repository }}:{{ .Values.init_image.tag | default "latest" }}
+          command:
+            - wget
+            - "-O"
+            - "/init/index.html"
+            - http://info.cern.ch
+          {{- with .Values.init_volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      dnsPolicy: Default
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
