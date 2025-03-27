@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-operator
+  namespace: homework
+  labels:
+    version: "1.0"
+    app.kubernetes.io/name: mysql-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mysql-operator
+  template:
+    metadata:
+      labels:
+        name: mysql-operator
+    spec:
+      containers:
+        - name: mysql-operator
+          image: roflmaoinmysoul/mysql-operator:1.0.0
+          imagePullPolicy: IfNotPresent
+      serviceAccountName: sa-mysql
