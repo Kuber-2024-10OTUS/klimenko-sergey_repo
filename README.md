@@ -102,7 +102,8 @@
     ```bash
     cd klimenko-sergey_repo/kubernetes-networks
     ```
- - Написаны манифесты для создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**, сервиса - **service.yaml** и ингресса - **ingress.yaml**
+ - Написаны манифесты для создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**,
+   сервиса - **service.yaml** и ингресса - **ingress.yaml**
  - Добавлена метка ноды:
     ```bash
     kubectl label nodes <node_name> homework=true
@@ -278,7 +279,7 @@
     ```
 
 ## Как запустить проект:
-# Задание №1:
+### Задание №1:
  - Склонировать репозиторий в локальное расположение, перейти в директорию с Helm чартом:
     ```bash
     git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
@@ -287,6 +288,9 @@
     cd klimenko-sergey_repo/kubernetes-templating/hw6
     ```
  - Добавить чарт для разворачивания СУБД **redis**:
+    ```bash
+    mkdir charts
+    ```
     ```bash
     helm pull oci://registry-1.docker.io/bitnamicharts/redis --untar --untardir ./charts/ --version 20.11.3
     ```
@@ -307,7 +311,7 @@
     helm upgrade -n homework -f values.yaml demo-hw6 .
     ```
 
-# Задание №2:
+### Задание №2:
  - Склонировать репозиторий в локальное расположение, перейти в директорию с манифестом *helmfile.yaml*:
     ```bash
     git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
@@ -339,6 +343,56 @@
 ---
 
 ## ДЗ №7:
+
+<details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Создана директория для ДЗ и произведено перемещение в нее:
+    ```bash
+    mkdir -p kubernetes-operators
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-operators
+    ```
+ - Написаны манифесты для: создания пространства имен - **namespace.yaml**, объекта *CustomResourceDefinition* - **CRD.yaml**,
+   запуска "деплоймента" оператора - **deployment.yaml**, кастомного ресурса типа *MySQL* - **mysql.yaml**
+ - Написаны манифесты для создания сервисного аккаунта *sa-mysql* - **sa-mysql.yaml**,
+   кластерной роли - **cluster-role.yaml**, кластерной связки - **cluster-role-binding.yaml**
+
+## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с кастомным ресурсом типа *MySQL*:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-operators
+    ```
+ - Выполнить команду создания пространства имен:
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Создать объект *CustomResourceDefinition*:
+    ```bash
+    kubectl apply -f CRD.yaml
+    ```
+ - Выполнить команду по подготовке к работе сервисного аккаунта *sa-mysql*:
+    ```bash
+    for i in sa-mysql.yaml,cluster-role.yaml,cluster-role-binding.yaml; do kubectl apply -f $i; done
+    ```
+ - Выполнить команду по созданию оператора:
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+ - Создать кастомный ресурс типа *MySQL*:
+    ```bash
+    kubectl apply -f mysql.yaml
+    ```
+
+</details>
+
+---
+
+## ДЗ №8:
 
 <details><summary>Инструкция</summary>
 

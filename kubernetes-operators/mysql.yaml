@@ -1,0 +1,10 @@
+apiVersion: otus.homework/v1
+kind: MySQL
+metadata:
+  name: demo7-mysql
+  # namespace: homework
+spec:
+  image: 'mysql:latest'
+  database: 'db01'
+  password: 'Pa$$w0rd'
+  storage_size: '3Gi'
