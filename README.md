@@ -421,7 +421,7 @@
     git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
     ```
     ```bash
-    cd klimenko-sergey_repo/kubernetes-templating/hw8
+    cd klimenko-sergey_repo/kubernetes-monitoring/hw8
     ```
  - Добавить чарт для разворачивания **prometheus**:
     ```bash
