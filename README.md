@@ -273,7 +273,7 @@
     ```bash
     cd klimenko-sergey_repo/kubernetes-templating/hw6
     ```
- - Создан Helm чарт, именуемый *hw6* и наполнен разлиными манифестами, заполнены файлы с переменными **Chart.yaml**, **values.yaml**:
+ - Создан Helm чарт, именуемый *hw6* и наполнен различными манифестами, заполнены файлы с переменными **Chart.yaml**, **values.yaml**:
     ```bash
     helm create hw6
     ```
@@ -393,6 +393,60 @@
 ---
 
 ## ДЗ №8:
+
+<details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Собран свой nginx docker образ, именуемый *klsergey/kl-nginx-mon*, из диреткории *klimenko-sergey_repo/kubernetes-monitoring/kl-nginx-mon*:
+    ```bash
+    docker login -u klsergey docker.io
+    ```
+    ```bash
+    docker build -t kl-nginx-mon:latest .
+    ```
+    ```bash
+    docker tag kl-nginx-mon:latest klsergey/kl-nginx-mon:1.0
+    ```
+    ```bash
+    docker push klsergey/kl-nginx-mon:1.0
+    ```
+ - Создан Helm чарт, именуемый *hw8* и наполнен различными манифестами, заполнены файлы с переменными **Chart.yaml**, **values.yaml**:
+    ```bash
+    helm create hw6
+    ```
+
+## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Helm чартом:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-templating/hw8
+    ```
+ - Добавить чарт для разворачивания **prometheus**:
+    ```bash
+    helm pull oci://registry-1.docker.io/bitnamicharts/kube-prometheus --untar --untardir ./charts/ --version 11.1.3
+    ```
+ - Развернуть чарт:
+    ```bash
+    helm install -n homework -f values.yaml demo-hw8 .
+    ```
+
+## Как проверить работоспособность:
+ - Организовать проброс портов:
+    ```bash
+    kubectl port-forward -n homework StatefulSet/prometheus-demo-hw8-kube-prometheus-prometheus 9090:9090
+    ```
+ - Открыть второй терминал и в нем запросить метрики по *API*, например:
+    ```bash
+    curl -s http://localhost:9090/api/v1/query\?query\=\{nginx_connections_accepted\} | jq
+    ```
+
+</details>
+
+---
+
+## ДЗ №9:
 
 <details><summary>Инструкция</summary>
 

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hw8.fullname" . }}-nginx-exporter
+  labels:
+    {{- include "hw8.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "hw8.selectorLabels" . | nindent 6 }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "hw8.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9113'
+    spec:
+      containers:
+        - name: nginx-exporter
+          image: 'nginx/nginx-prometheus-exporter:1.4.1'
+          command: ['/usr/bin/nginx-prometheus-exporter']
+          args: [
+            '--nginx.scrape-uri=http://homework.otus/basic_status'
+          ]
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 500m
+          ports:
+            - name: nginx-exporter
+              containerPort: 9113              

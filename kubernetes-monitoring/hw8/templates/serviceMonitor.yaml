@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "hw8.fullname" . }}-service-monitor
+  labels:
+    {{- include "hw8.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "hw8.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: nginx-exporter
+    interval: 30s
