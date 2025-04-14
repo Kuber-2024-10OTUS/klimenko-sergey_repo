@@ -494,6 +494,11 @@
     ```bash
     cd klimenko-sergey_repo/kubernetes-logging/terraform
     ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
  - Запустить разворачивание *Kubernetes* и S3  хранилища на мощностях Яндекс Облака:
     ```bash
     cd klimenko-sergey_repo/kubernetes-logging/terraform
