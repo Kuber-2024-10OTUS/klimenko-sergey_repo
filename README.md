@@ -412,7 +412,7 @@
     ```
  - Создан Helm чарт, именуемый *hw8* и наполнен различными манифестами, заполнены файлы с переменными **Chart.yaml**, **values.yaml**:
     ```bash
-    helm create hw6
+    helm create hw8
     ```
 
 ## Как запустить проект:
@@ -450,6 +450,124 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создан сервисный аккаунт на *Яндекс Облаке*:
+    ```bash
+    SVC_ACCT="<service_account_name>"
+    ```
+    ```bash
+    FOLDER_ID=$(yc config get folder-id)
+    ```
+    ```bash
+    yc iam service-account create --name $SVC_ACCT --folder-id $FOLDER_ID
+    ```
+ - Выданы права сервисному аккаунту на управление *Managed Service for Kubernetes*:
+    ```bash
+    ACCT_ID=$(yc iam service-account get $SVC_ACCT | grep ^id | awk '{print $2}')
+    ```
+    ```bash
+    yc resource-manager folder add-access-binding --id $FOLDER_ID --role admin --service-account-id $ACCT_ID
+    ```
+ - Получен IAM-токен для сервисного аккаунта:
+    ```bash
+    mkdir ~/keys
+    ```
+    ```bash
+    yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
+    ```
+ - Подготовлены *Terraform* манифесты для разворачивания *Managed Service for Kubernetes* и объектного хранилища *S3*
+ - Добавлен на управляющую машину *Helm* чарт от *Grafana Lab*:
+    ```bash
+    helm repo add grafana https://grafana.github.io/helm-charts
+    ```
+    ```bash
+    helm repo update
+    ```
+ - Подготовлены файлы с переменными **values.yaml** для: *Loki*, *promtail*, *Grafana*
+ - Развернуто ПО, добавлен в репозиторий скриншот **Screenshot_Grafana.png** с отображением собранных журналов в *Grafana*
+
+ ## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-logging/terraform
+    ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
+ - Запустить разворачивание *Kubernetes* и S3  хранилища на мощностях Яндекс Облака:
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-logging/terraform
+    ```
+    ```bash
+    terraform init
+    ```
+    ```bash
+    terraform apply
+    ```
+ - Выполнить настройку контекста на управляющей машине:
+    ```bash
+    yc managed-kubernetes cluster get-credentials hw9-cluster --external
+    ```
+ - Выпустить ключ доступа секрета клиента *S3*:
+    ```bash
+    cd ../Loki
+    ```
+    ```bash
+    yc iam access-key create --service-account-name=labsa --format=json > sa-key.json
+    ```
+ - Добавить значения переменных *secretAccessKey*, *accessKeyId* в файле **values.yaml**
+ - Запустить установку **Loki**:
+    ```bash
+    helm install loki grafana/loki -f values.yaml
+    ```
+ - Развернуть *promtail*:
+    ```bash
+    cd ../promtail
+    ```
+    ```bash
+    helm install promtail grafana/promtail -f values.yaml
+    ```
+ - Развернуть *Grafana*:
+    ```bash
+    cd ../Grafana
+    ```
+    ```bash
+    helm install my-grafana grafana/grafana -f values.yaml
+    ```
+
+## Как проверить работоспособность:
+ - Организовать проброс портов для доступа к *Grafana* с локальной машины:
+    ```bash
+    export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=my-grafana" -o jsonpath="{.items[0].metadata.name}")
+    ```
+    ```bash
+    kubectl get secret --namespace default my-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+    ```
+    ```bash
+    kubectl --namespace default port-forward $POD_NAME 3000
+    ```
+ - На локальной машине в браузере открыть *Grafana* по адерсу:
+    ```http
+    http://localhost:3000
+    ```
+ - В разделе *Data source* добавить *Loki* по адерсу:
+    ```http
+    http://loki-gateway.default.svc.cluster.local/
+    ```
+ - Перейти в раздел *Drilldown*, убедиться в наличии журналов
+
+</details>
+
+---
+
+## ДЗ №10:
+
+<details><summary>Инструкция</summary>
 
 
 </details>
