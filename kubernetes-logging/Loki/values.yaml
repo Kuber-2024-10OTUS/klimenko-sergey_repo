@@ -39,9 +39,9 @@ loki:
       # AWS region where the S3 bucket is located
       region: "ru-central1-a"
       # AWS secret access key
-      secretAccessKey: "YCPoxcv7gtwA2NWSNiVsqq0gHtz5TilwIfl_dS7k"
+      secretAccessKey: 
       # AWS access key ID
-      accessKeyId: "YCAJEW6LlBXfknOxFDlsNp87d"
+      accessKeyId: 
       # # AWS signature version (e.g., v2 or v4)
       # signatureVersion: <your-signature-version>
       # Forces the path style for S3 (true/false)
