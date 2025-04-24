@@ -592,6 +592,8 @@
     yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
     ```
  - Подготовлены *Terraform* манифесты для разворачивания *Managed Service for Kubernetes*
+  - Написан манифест для разворачивания проекта в *ArgoCD*, именуемый *project-otus.yaml*
+  - Написаны манифесты для разворачивания приложений посредством *ArgoCD*, именуемые *app-argocd-01.yaml*, *app-argocd-02.yaml*
 
  ## Как запустить проект:
  - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:

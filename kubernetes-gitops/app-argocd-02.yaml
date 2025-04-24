@@ -12,11 +12,24 @@ spec:
     targetRevision: kubernetes-gitops
     path: kubernetes-templating/hw6
     helm:
-      parameters:
-      - name: "replicaCount"
-        value: "3"
-      - name: "lifecycle.enabled"
-        value: "false"
+      # parameters:
+      # - name: "replicaCount"
+      #   value: "3"
+      values: |
+        replicaCount: 3
+        readinessProbe:
+          enabled: false
+        volumes:
+          - name: workdir
+            persistentVolumeClaim:
+              claimName: kubernetes-templating-hw6-pvc
+              readOnly: false
+          - name: my-vol-cm
+            configMap:
+              name: kubernetes-templating-hw6-cm
+              items:
+                - key: "text.properties"
+                  path: "file"
   destination:
     server: https://kubernetes.default.svc
     namespace: homeworkhelm
