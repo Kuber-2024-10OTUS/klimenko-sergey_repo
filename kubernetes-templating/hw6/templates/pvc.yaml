@@ -9,4 +9,4 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: {{ include "hw6.fullname" . }}-sc
+  # storageClassName: {{ include "hw6.fullname" . }}-sc
