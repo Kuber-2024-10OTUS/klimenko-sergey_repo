@@ -1,0 +1,53 @@
+.envrc
+.vscode
+
+# Ignore answer file for automating the installation of the Debian OS
+preseed.cfg
+
+# Ignore all packer vars and cache files
+variables.json
+*.auto.pkrvars.hcl
+*.auto.pkrvars.hcl.bak*
+**/packer_cache/
+
+# Ignore all output files, exept outputs.tf
+**/output*
+!outputs.tf
+
+# Ignore logs
+*log
+
+# Ignore terraform state, vars, override and CLI configuration files
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfvars.bak*
+.terraform/
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Ignore Ansible retry files
+*.retry
+
+# Ignore Ansible inventory file
+inventory
+
+# Ignore Ansible Galaxy
+
+# Ignore Vault key
+vault.key
+
+# Ignore external Helm repositories
+redis
+kafka
+kube-prometheus
+argo-cd
+
+# Ignore SA key for S3 object storage
+sa-key.json

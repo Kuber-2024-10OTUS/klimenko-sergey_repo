@@ -1,0 +1,6 @@
+cloud_id                          = "1111111111111111"
+folder_id                         = "22222222222222222"
+zone                              = "ru-central1-a"
+service_account_key_file          = "/home/...key.json"
+public_key                        = "<path-to-pub-key>"
+sa_id                             = "<service-account-id>"

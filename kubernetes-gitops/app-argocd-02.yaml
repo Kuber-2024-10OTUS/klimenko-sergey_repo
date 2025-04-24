@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-templating
+  namespace: argocd
+  labels:
+    name: kubernetes-templating
+spec:
+  project: otus
+  source:
+    repoURL: https://github.com/Kuber-2024-10OTUS/klimenko-sergey_repo
+    targetRevision: kubernetes-gitops
+    path: kubernetes-templating/hw6
+    helm:
+      parameters:
+      - name: "replicaCount"
+        value: "3"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homeworkhelm
+  syncPolicy:
+    automated:
+      # enabled: true
+      prune: true
+      selfHeal: true  
+    syncOptions:
+      - CreateNamespace=true
