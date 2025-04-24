@@ -501,9 +501,6 @@
  - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
  - Запустить разворачивание *Kubernetes* и S3  хранилища на мощностях Яндекс Облака:
     ```bash
-    cd klimenko-sergey_repo/kubernetes-logging/terraform
-    ```
-    ```bash
     terraform init
     ```
     ```bash
@@ -551,11 +548,11 @@
     ```bash
     kubectl --namespace default port-forward $POD_NAME 3000
     ```
- - На локальной машине в браузере открыть *Grafana* по адерсу:
+ - На локальной машине в браузере открыть *Grafana* по адресу:
     ```http
     http://localhost:3000
     ```
- - В разделе *Data source* добавить *Loki* по адерсу:
+ - В разделе *Data source* добавить *Loki* по адресу:
     ```http
     http://loki-gateway.default.svc.cluster.local/
     ```
@@ -566,6 +563,118 @@
 ---
 
 ## ДЗ №10:
+
+<details><summary>Инструкция</summary>
+
+## В процессе сделано:
+ - Создан сервисный аккаунт на *Яндекс Облаке*:
+    ```bash
+    SVC_ACCT="<service_account_name>"
+    ```
+    ```bash
+    FOLDER_ID=$(yc config get folder-id)
+    ```
+    ```bash
+    yc iam service-account create --name $SVC_ACCT --folder-id $FOLDER_ID
+    ```
+ - Выданы права сервисному аккаунту на управление *Managed Service for Kubernetes*:
+    ```bash
+    ACCT_ID=$(yc iam service-account get $SVC_ACCT | grep ^id | awk '{print $2}')
+    ```
+    ```bash
+    yc resource-manager folder add-access-binding --id $FOLDER_ID --role admin --service-account-id $ACCT_ID
+    ```
+ - Получен IAM-токен для сервисного аккаунта:
+    ```bash
+    mkdir ~/keys
+    ```
+    ```bash
+    yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
+    ```
+ - Подготовлены *Terraform* манифесты для разворачивания *Managed Service for Kubernetes*
+  - Написан манифест для разворачивания проекта в *ArgoCD*, именуемый *project-otus.yaml*
+  - Написаны манифесты для разворачивания приложений посредством *ArgoCD*, именуемые *app-argocd-01.yaml*, *app-argocd-02.yaml*
+
+ ## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-gitops/terraform
+    ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
+ - Запустить разворачивание *Kubernetes* на мощностях Яндекс Облака:
+    ```bash
+    terraform init
+    ```
+    ```bash
+    terraform apply
+    ```
+ - Выполнить настройку контекста на управляющей машине:
+    ```bash
+    yc managed-kubernetes cluster get-credentials hw10-cluster --external
+    ```
+ - Скачать *Helm* репозиторий с *ArgoCD*:
+    ```bash
+    cd ..
+    ```
+    ```bash
+    helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/argo/chart/argo-cd --version 7.3.11-2 --untar
+    ```
+ - Скопировать файл с перменными **values.yaml** в директорию с *Helm* репозиторием:
+    ```bash
+    cp ArgoCD/values.yaml argo-cd/values.yaml
+    ```
+ - Развернуть *ArgoCD* в кластере:
+    ```bash
+    cd argo-cd
+    ```
+    ```bash
+    helm install --namespace argocd --create-namespace argo-cd .
+    ```
+ - Получить пароль от учетной записи *admin* в *ArgoCD*:
+    ```bash
+    kubectl --namespace argocd get secret argocd-initial-admin-secret --output jsonpath="{.data.password}" | base64 -d
+    ```
+ - Развернуть в кластере приложения посредством *ArgoCD*:
+    ```bash
+    cd ..
+    ```
+    ```bash
+    kubectl apply -f project-otus.yaml
+    ```
+    ```bash
+    kubectl apply -f app-argocd-01.yaml -f app-argocd-02.yaml
+    ```
+
+## Как проверить работоспособность:
+ - Проверить наличие "подов" в состоянии *Running*:
+    ```bash
+    kubectl get pods -n homework
+    ```
+    ```bash
+    kubectl get pods -n homeworkhelm
+    ```
+ - Организовать проброс портов для доступа к *ArgoCD* с локальной машины:
+    ```bash
+    kubectl port-forward service/argo-cd-argocd-server --namespace argocd 8080:443
+    ```
+ - На локальной машине в браузере открыть *ArgoCD* по адресу:
+    ```http
+    https://localhost:8080
+    ```
+ - В разделе *Applications* проверить, что статус приложений *Healthy*
+
+</details>
+
+---
+
+## ДЗ №11:
 
 <details><summary>Инструкция</summary>
 
