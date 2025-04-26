@@ -48,6 +48,8 @@ redis
 kafka
 kube-prometheus
 argo-cd
+consul-k8s
+vault-helm
 
 # Ignore SA key for S3 object storage
 sa-key.json
