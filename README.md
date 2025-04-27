@@ -792,16 +792,19 @@
     ```
  - Включить авторизацию *auth/kubernetes* и сконфигурировать ее:
     ```bash
-    kubectl -n vault exec vault-0 -- sh -c 'vault auth enable kubernetes'
-    ```
-    ```bash
     kubectl -n vault exec vault-0 -- sh -c 'vault login <ROOT_TOKEN>'
     ```
     ```bash
-    kubectl -n vault exec vault-0 -- sh -c 'vault write auth/kubernetes/config\
-    token_reviewer_jwt="$SA_TOKEN" \
+    kubectl -n vault exec vault-0 -- sh -c 'vault auth enable kubernetes'
+    ```
+    ```bash
+    KUBERNETES_PORT_443_TCP_ADDR=$(echo $(kubectl -n vault exec vault-0 -- sh -c 'echo ${KUBERNETES_PORT_443_TCP_ADDR}'))
+    ```
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c "vault write auth/kubernetes/config\
+    token_reviewer_jwt=${SA_TOKEN} \
     kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
-    kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+    kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     ```
  - Применена политика *otus-policy*:
     ```bash
@@ -818,7 +821,7 @@
     kubectl -n vault exec vault-0 -- sh -c 'vault write auth/kubernetes/role/otus \
     bound_service_account_names=vault-auth \
     bound_service_account_namespaces=vault \
-    policies=default \
+    policies=otus-policy \
     ttl=1h'
     ```
  - Установить *External Secrets Operator*:

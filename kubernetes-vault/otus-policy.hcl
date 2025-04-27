@@ -1,3 +1,3 @@
-path "/otus/data/cred/*" {
+path "/otus/data/cred" {
   capabilities = ["read", "list"]
 }
