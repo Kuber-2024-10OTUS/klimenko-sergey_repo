@@ -19,8 +19,8 @@ provider "yandex" {
   service_account_key_file = var.service_account_key_file
 }
 
-resource "yandex_kubernetes_cluster" "hw10-cluster" {
-  name       = "hw10-cluster"
+resource "yandex_kubernetes_cluster" "hw11-cluster" {
+  name       = "hw11-cluster"
   network_id = yandex_vpc_network.lab_net.id
   master {
     version = "1.31"
@@ -39,26 +39,26 @@ resource "yandex_kubernetes_cluster" "hw10-cluster" {
   ]
 
   labels = {
-    lab = "hw10"
+    lab = "hw11"
   }
 
   release_channel         = "REGULAR"
   network_policy_provider = "CALICO"
 }
 
-resource "yandex_kubernetes_node_group" "hw10-workernode" {
-  cluster_id  = yandex_kubernetes_cluster.hw10-cluster.id
+resource "yandex_kubernetes_node_group" "hw11-workernode" {
+  cluster_id  = yandex_kubernetes_cluster.hw11-cluster.id
   name        = "workernode-0"
-  description = "Kubernetes workernode for homework #10"
+  description = "Kubernetes workernode for homework #11"
   version     = "1.31"
 
   labels = {
-    lab       = "hw10",
+    lab       = "hw11",
     node-role = "worker"
   }
 
   node_labels = {
-    lab       = "hw10",
+    lab       = "hw11",
     node-role = "worker"
     homework  = "true"
   }
@@ -76,7 +76,7 @@ resource "yandex_kubernetes_node_group" "hw10-workernode" {
     }
 
     resources {
-      memory = 4
+      memory = 8
       cores  = 2
     }
 
@@ -96,7 +96,7 @@ resource "yandex_kubernetes_node_group" "hw10-workernode" {
 
   scale_policy {
     fixed_scale {
-      size = 1
+      size = 3
     }
   }
 
@@ -123,87 +123,6 @@ resource "yandex_kubernetes_node_group" "hw10-workernode" {
     }
   }
 }
-
-resource "yandex_kubernetes_node_group" "hw10-infranode" {
-  cluster_id  = yandex_kubernetes_cluster.hw10-cluster.id
-  name        = "infranode-0"
-  description = "Kubernetes infranode for homework #10"
-  version     = "1.31"
-
-  labels = {
-    lab       = "hw10",
-    node-role = "infra"
-  }
-
-  node_labels = {
-    lab       = "hw10",
-    node-role = "infra"
-    homework  = "true"
-  }
-
-  node_taints = ["node-role=infra:NoSchedule"]
-
-  instance_template {
-    platform_id = "standard-v2"
-
-    network_interface {
-      nat        = true
-      subnet_ids = ["${yandex_vpc_subnet.lab_subnet.id}"]
-    }
-
-    metadata = {
-      ssh-keys = "    - debian:${file(var.public_key)}"
-    }
-
-    resources {
-      memory = 20
-      cores  = 2
-    }
-
-    boot_disk {
-      type = "network-hdd"
-      size = 64
-    }
-
-    scheduling_policy {
-      preemptible = true
-    }
-
-    container_runtime {
-      type = "containerd"
-    }
-  }
-
-  scale_policy {
-    fixed_scale {
-      size = 1
-    }
-  }
-
-  allocation_policy {
-    location {
-      zone = var.zone
-    }
-  }
-
-  maintenance_policy {
-    auto_upgrade = true
-    auto_repair  = true
-
-    maintenance_window {
-      day        = "monday"
-      start_time = "15:00"
-      duration   = "3h"
-    }
-
-    maintenance_window {
-      day        = "friday"
-      start_time = "10:00"
-      duration   = "4h30m"
-    }
-  }
-}
-
 
 resource "yandex_vpc_network" "lab_net" { name = "lab_net" }
 

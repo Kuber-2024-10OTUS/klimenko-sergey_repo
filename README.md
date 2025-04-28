@@ -678,6 +678,190 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создан сервисный аккаунт на *Яндекс Облаке*:
+    ```bash
+    SVC_ACCT="<service_account_name>"
+    ```
+    ```bash
+    FOLDER_ID=$(yc config get folder-id)
+    ```
+    ```bash
+    yc iam service-account create --name $SVC_ACCT --folder-id $FOLDER_ID
+    ```
+ - Выданы права сервисному аккаунту на управление *Managed Service for Kubernetes*:
+    ```bash
+    ACCT_ID=$(yc iam service-account get $SVC_ACCT | grep ^id | awk '{print $2}')
+    ```
+    ```bash
+    yc resource-manager folder add-access-binding --id $FOLDER_ID --role admin --service-account-id $ACCT_ID
+    ```
+ - Получен IAM-токен для сервисного аккаунта:
+    ```bash
+    mkdir ~/keys
+    ```
+    ```bash
+    yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
+    ```
+ - Подготовлены *Terraform* манифесты для разворачивания *Managed Service for Kubernetes*
+ - Подготовлены файлы с переменными **values.yaml** для: *consul*, *vault*
+ - Написаны манифесты **sa-vault-auth.yaml**, **cluster-role-binding.yaml** для создания сервисного аккаунта *vault-auth* и *ClusterRoleBinding*
+ - Написана политика в файле **otus-policy.hcl**
+ - Написаны манифесты **SecretStore.yaml**, **ExternalSecret.yaml** для создания сущности типа *Secret*, именуемый *otus-cred*
+
+ ## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-vault/terraform
+    ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
+ - Запустить разворачивание *Kubernetes* на мощностях Яндекс Облака:
+    ```bash
+    terraform init
+    ```
+    ```bash
+    terraform apply
+    ```
+ - Выполнить настройку контекста на управляющей машине:
+    ```bash
+    yc managed-kubernetes cluster get-credentials hw11-cluster --external
+    ```
+ - Скачать репозиторий *consul* и установить его:
+    ```bash
+    cd ..
+    ```
+    ```bash
+    git clone https://github.com/hashicorp/consul-k8s.git
+    ```
+    ```bash
+    helm install consul -f consul/values.yaml ./consul-k8s/charts/consul/ -n consul --create-namespace
+    ```
+ - Скачать репозиторий *vault* и установить его:
+    ```bash
+    git clone https://github.com/hashicorp/vault-helm.git
+    ```
+    ```bash
+    helm install vault -f vault/values.yaml ./vault-helm -n vault --create-namespace
+    ```
+ - Выполнить инициализацию *vault*:
+    ```bash
+    kubectl exec -ti -n vault vault-0 -- sh
+    ```
+    ```bash
+    vault operator init -key-shares=1 -key-threshold=1
+    ```
+    ```bash
+    exit
+    ```
+ - Распечатать с помощью полученных unseal key все поды хранилища следующей командой:
+    ```bash
+    kubectl exec -ti -n vault <vault-X> -- sh
+    ```
+    ```bash
+    vault operator unseal <key-shares>
+    ```
+    ```bash
+    exit
+    ```
+ - Организовать проброс портов для доступа к WebUI *vault* с локальной машины:
+    ```bash
+    kubectl port-forward service/vault --namespace vault 8200:8200
+    ```
+ - На локальной машине в браузере открыть *vault* по адресу:
+    ```http
+    https://localhost:8200
+    ```
+ - Создать хранилище секретов *otus/* с *Secret Engine KV*, а в нем секрет *otus/cred*, содержащий *username='otus'* *password='asajkjkahs’*
+ - Создать сервисный аккаунт *vault-auth* с ролью *system:auth-delegator*:
+    ```bash
+    kubectl apply -f sa-vault-auth.yaml
+    ```
+    ```bash
+    kubectl apply -f cluster-role-binding.yaml
+    ```
+ - Сохранить в переменной токен сервисного аккаунта:
+    ```bash
+    SA_TOKEN=$(kubectl get secret/vault-auth-secret -n vault -o json | jq -r .data.token | base64 -d)
+    ```
+ - Включить авторизацию *auth/kubernetes* и сконфигурировать ее:
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c 'vault login <ROOT_TOKEN>'
+    ```
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c 'vault auth enable kubernetes'
+    ```
+    ```bash
+    KUBERNETES_PORT_443_TCP_ADDR=$(echo $(kubectl -n vault exec vault-0 -- sh -c 'echo ${KUBERNETES_PORT_443_TCP_ADDR}'))
+    ```
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c "vault write auth/kubernetes/config\
+    token_reviewer_jwt=${SA_TOKEN} \
+    kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
+    kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    ```
+ - Применена политика *otus-policy*:
+    ```bash
+    OTUS_POLICY=$(cat otus-policy.hcl)
+    ```
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c "echo '$OTUS_POLICY' > /tmp/otus-policy.hcl"
+    ```
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c "vault policy write otus-policy /tmp/otus-policy.hcl"
+    ```
+ - Создать роль *auth/kubernetes/role/otus*:
+    ```bash
+    kubectl -n vault exec vault-0 -- sh -c 'vault write auth/kubernetes/role/otus \
+    bound_service_account_names=vault-auth \
+    bound_service_account_namespaces=vault \
+    policies=otus-policy \
+    ttl=1h'
+    ```
+ - Установить *External Secrets Operator*:
+    ```bash
+    helm repo add external-secrets https://charts.external-secrets.io
+    ```
+    ```bash
+    helm repo update
+    ```
+    ```bash
+    helm install external-secrets external-secrets/external-secrets -n vault
+    ```
+ - Создать сущность типа *Secret* посредством *External Secrets Operator*:
+    ```bash
+    kubectl apply -f SecretStore.yaml
+    ```
+    ```bash
+    kubectl apply -f ExternalSecret.yaml
+    ```
+
+## Как проверить работоспособность:
+ - Получить значения из сущности типа *Secret*, именуемой *otus-cred*:
+    ```bash
+    kubectl get Secret -n vault otus-cred -o json | jq .data
+    ```
+    ```bash
+    kubectl get Secret -n vault otus-cred -o json | jq -r .data.username | base64 -d
+    ```
+    ```bash
+    kubectl get Secret -n vault otus-cred -o json | jq -r .data.password | base64 -d
+    ```
+
+</details>
+
+---
+
+## ДЗ №12:
+
+<details><summary>Инструкция</summary>
+
 
 </details>
 

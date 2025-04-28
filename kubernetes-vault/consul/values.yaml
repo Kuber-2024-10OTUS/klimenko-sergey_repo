@@ -1,0 +1,5 @@
+# global:
+#   image:
+server:
+  enabled: true
+  replicas: 3
