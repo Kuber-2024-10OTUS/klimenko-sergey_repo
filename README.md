@@ -862,6 +862,116 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создан сервисный аккаунт на *Яндекс Облаке*:
+    ```bash
+    SVC_ACCT="<service_account_name>"
+    ```
+    ```bash
+    FOLDER_ID=$(yc config get folder-id)
+    ```
+    ```bash
+    yc iam service-account create --name $SVC_ACCT --folder-id $FOLDER_ID
+    ```
+ - Выданы права сервисному аккаунту на управление *Managed Service for Kubernetes*:
+    ```bash
+    ACCT_ID=$(yc iam service-account get $SVC_ACCT | grep ^id | awk '{print $2}')
+    ```
+    ```bash
+    yc resource-manager folder add-access-binding --id $FOLDER_ID --role admin --service-account-id $ACCT_ID
+    ```
+ - Получен IAM-токен для сервисного аккаунта:
+    ```bash
+    mkdir ~/keys
+    ```
+    ```bash
+    yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
+    ```
+ - Подготовлены *Terraform* манифесты для разворачивания *Managed Service for Kubernetes*, объектного хранилища *S3*, создания сервисной учетной записи *sa-s3* для доступа к хранилищу
+ - Написаны манифесты: *namespace.yaml*, *secret.yaml*, *storageClass.yaml*, *pvc.yaml*, *deployment.yaml*
+
+## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-csi/terraform
+    ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
+ - Запустить разворачивание *Kubernetes* на мощностях Яндекс Облака:
+    ```bash
+    terraform init
+    ```
+    ```bash
+    terraform apply
+    ```
+ - Выполнить настройку контекста на управляющей машине:
+    ```bash
+    yc managed-kubernetes cluster get-credentials hw12-cluster --external
+    ```
+ - Выполнить команду создания пространства имен:
+    ```bash
+    cd ..
+    ```
+    ```bash
+    kubectl apply -f namespace.yaml
+    ```
+ - Выпустить ключ доступа секрета клиента *S3*:
+    ```bash
+    yc iam access-key create --service-account-name=sa-s3 --format=json > sa-key.json
+    ```
+ - В манифесте *secret.yaml* заполнить ключи **accessKeyID**, **secretAccessKey**, затем развернуть его:
+    ```bash
+    kubectl apply -f secret.yaml
+    ```
+ - Установить *StorageClass*, описывающий *S3* тип хранилища:
+    ```bash
+    kubectl apply -f storageClass.yaml
+    ```
+ - Установить *CSI S3* драйвер:
+    ```bash
+    git clone https://github.com/yandex-cloud/k8s-csi-s3.git
+    ```
+    ```bash
+    kubectl apply -f k8s-csi-s3/deploy/kubernetes/provisioner.yaml
+    ```
+    ```bash
+    kubectl apply -f k8s-csi-s3/deploy/kubernetes/driver.yaml
+    ```
+    ```bash
+    kubectl apply -f k8s-csi-s3/deploy/kubernetes/csi-s3.yaml
+    ```
+ - Развернуть *PersistentVolumeClaim*, использующий для хранения *S3 storageClass*:
+    ```bash
+    kubectl apply -f pvc.yaml
+    ```
+ - Развернуть *Deployment*, использующий созданный *PVC*:
+    ```bash
+    kubectl apply -f deployment.yaml
+    ```
+
+## Как проверить работоспособность:
+ - Убедиться в наличии **index.html** файла, сохраненного "подом" в *S3* хранилище, открыв в браузере ссылку:
+    ```bash
+    S3_VOLUMENAME=$(kubectl get pvc -n homework hw12-pvc -o json | jq -r .spec.volumeName)
+    ```
+    ```curl
+    https://console.yandex.cloud/folders/${FOLDER_ID}/storage/buckets/hw12-bucket?key=${S3_VOLUMENAME}%2F
+    ```
+
+</details>
+
+---
+
+## ДЗ №13:
+
+<details><summary>Инструкция</summary>
+
 
 </details>
 

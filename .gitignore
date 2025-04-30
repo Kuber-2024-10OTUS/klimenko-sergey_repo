@@ -53,3 +53,6 @@ vault-helm
 
 # Ignore SA key for S3 object storage
 sa-key.json
+
+# Ignore external git repositories
+k8s-csi-s3
