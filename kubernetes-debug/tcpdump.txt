@@ -1,0 +1,22 @@
+root@hw13-94c45bdf8-4h62m:/# tcpdump -nn -i any -e port 80
+tcpdump: data link type LINUX_SLL2
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+09:46:56.562994 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 80: 10.244.0.134.51488 > 10.244.0.151.80: Flags [S], seq 1334296936, win 64240, options [mss 1460,sackOK,TS val 1846248705 ecr 0,nop,wscale 7], length 0
+09:46:56.563005 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 80: 10.244.0.151.80 > 10.244.0.134.51488: Flags [S.], seq 2904956607, ack 1334296937, win 65160, options [mss 1460,sackOK,TS val 4245991811 ecr 1846248705,nop,wscale 7], length 0
+09:46:56.563019 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51488 > 10.244.0.151.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1846248705 ecr 4245991811], length 0
+09:46:56.563076 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 375: 10.244.0.134.51488 > 10.244.0.151.80: Flags [P.], seq 1:304, ack 1, win 502, options [nop,nop,TS val 1846248705 ecr 4245991811], length 303: HTTP: GET / HTTP/1.1
+09:46:56.563079 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 72: 10.244.0.151.80 > 10.244.0.134.51488: Flags [.], ack 304, win 507, options [nop,nop,TS val 4245991811 ecr 1846248705], length 0
+09:46:56.563473 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 310: 10.244.0.151.80 > 10.244.0.134.51488: Flags [P.], seq 1:239, ack 304, win 507, options [nop,nop,TS val 4245991812 ecr 1846248705], length 238: HTTP: HTTP/1.1 200 OK
+09:46:56.563510 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51488 > 10.244.0.151.80: Flags [.], ack 239, win 501, options [nop,nop,TS val 1846248706 ecr 4245991812], length 0
+09:46:56.563541 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 684: 10.244.0.151.80 > 10.244.0.134.51488: Flags [P.], seq 239:851, ack 304, win 507, options [nop,nop,TS val 4245991812 ecr 1846248706], length 612: HTTP
+09:46:56.563550 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51488 > 10.244.0.151.80: Flags [.], ack 851, win 497, options [nop,nop,TS val 1846248706 ecr 4245991812], length 0
+09:47:26.968783 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 80: 10.244.0.134.51912 > 10.244.0.151.80: Flags [S], seq 1095058606, win 64240, options [mss 1460,sackOK,TS val 1846279111 ecr 0,nop,wscale 7], length 0
+09:47:26.968796 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 80: 10.244.0.151.80 > 10.244.0.134.51912: Flags [S.], seq 1908331541, ack 1095058607, win 65160, options [mss 1460,sackOK,TS val 4246022217 ecr 1846279111,nop,wscale 7], length 0
+09:47:26.968810 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51912 > 10.244.0.151.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1846279111 ecr 4246022217], length 0
+09:47:26.968845 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 375: 10.244.0.134.51912 > 10.244.0.151.80: Flags [P.], seq 1:304, ack 1, win 502, options [nop,nop,TS val 1846279111 ecr 4246022217], length 303: HTTP: GET / HTTP/1.1
+09:47:26.968848 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 72: 10.244.0.151.80 > 10.244.0.134.51912: Flags [.], ack 304, win 507, options [nop,nop,TS val 4246022217 ecr 1846279111], length 0
+09:47:26.969030 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 310: 10.244.0.151.80 > 10.244.0.134.51912: Flags [P.], seq 1:239, ack 304, win 507, options [nop,nop,TS val 4246022217 ecr 1846279111], length 238: HTTP: HTTP/1.1 200 OK
+09:47:26.969068 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51912 > 10.244.0.151.80: Flags [.], ack 239, win 501, options [nop,nop,TS val 1846279111 ecr 4246022217], length 0
+09:47:26.969087 eth0  Out ifindex 2 6a:87:9c:8c:4a:45 ethertype IPv4 (0x0800), length 684: 10.244.0.151.80 > 10.244.0.134.51912: Flags [P.], seq 239:851, ack 304, win 507, options [nop,nop,TS val 4246022217 ecr 1846279111], length 612: HTTP
+09:47:26.969105 eth0  In  ifindex 2 2e:aa:c9:a8:bf:0e ethertype IPv4 (0x0800), length 72: 10.244.0.134.51912 > 10.244.0.151.80: Flags [.], ack 851, win 497, options [nop,nop,TS val 1846279111 ecr 4246022217], length 0
