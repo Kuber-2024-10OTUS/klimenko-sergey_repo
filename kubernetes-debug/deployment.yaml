@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hw13
+  namespace: homework
+  labels:
+    app: hw13
+spec:
+  selector:
+    matchLabels:
+      app: hw13
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 33%
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: hw13
+    spec:
+      containers:
+        - name: nginx
+          image: kyos0109/nginx-distroless
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CUSTOM_PORT
+              value: "8000"
+            - name: CUSTOM_ROOT
+              value: "/homework"
+          # command: ["/bin/sh", "-c"]
+          # args: [
+          #   "echo 'server { listen $(CUSTOM_PORT); location / { root $(CUSTOM_ROOT); index index.html; } }' \
+          #   >> /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+          # ]
+          # lifecycle:
+          #   preStop:
+          #     exec:
+          #       command: ["/bin/sh", "-c", 'rm /homework/index.html']
+          ports:
+            - containerPort: 80
+          # readinessProbe:
+            # httpGet:
+            #   scheme: HTTP
+            #   path: /index.html
+            #   port: 80
+            # initialDelaySeconds: 5
+            # periodSeconds: 5
+          volumeMounts:
+            - name: workdir
+              mountPath: /homework
+      # These containers are run during pod initialization
+      initContainers:
+        - name: install
+          image: busybox:1.28
+          command:
+            - wget
+            - "-O"
+            - "/init/index.html"
+            - http://info.cern.ch
+          volumeMounts:
+            - name: workdir
+              mountPath: /init
+      dnsPolicy: Default
+      volumes:
+        - name: workdir
+          emptyDir: {}

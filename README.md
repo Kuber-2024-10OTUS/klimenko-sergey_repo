@@ -972,7 +972,99 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Написаны манифесты для создания пространства имен - **namespace.yaml**, запуска "деплоймента" - **deployment.yaml**,
+   сервиса - **service.yaml** и ингресса - **ingress.yaml**
+ - Сохранен вывод команды *ls –la* для директории */etc/nginx* в файле, именуемом **ls.txt**
+ - Сохранен вывод команды *tcpdump* в файле, именуемом **tcpdump.txt**
+ - Сохранен лог *nginx* "пода" в файл **log.txt**
+
+## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-debug
+    ```
+ - Получить доступ к файловой системе отлаживаемого контейнера
+из эфемерного:
+    ```bash
+    kubectl debug <pod_name> -it --image=debian --target=nginx -n homework
+    ```
+ - Просмотреть содержимое директории */etc/nginx* отлаживаемого контейнера:
+    ```bash
+    apt update
+    ```
+    ```bash
+    apt install -y procps tcpdump
+    ```
+    ```bash
+    top
+    ```
+    ```bash
+    ls -la /proc/1/root/etc/nginx/
+    ```
+ - Запустить в отладочном контейнере команду *tcpdump*:
+    ```bash
+    tcpdump -nn -i any -e port 80
+    ```
+ - Обратиться к вэб серверу следующей командой:
+    ```bash
+    curl http://homework.otus
+    ```
+ - Убедившись что *tcpdump* отображает сетевые пакеты, выйти из отладочного контейнера:
+    ```bash
+    exit
+    ```
+ - Узнать ID  интересующего контейнера:
+    - Вариант 1:
+         ```bash
+         eval $(minikube docker-env)
+         ```
+         ```bash
+         docker ps | grep nginx
+         ```
+    - Вариант 2:
+      ```bash
+      kubectl debug node/minikube -it --image=busybox --profile=sysadmin
+      ```
+      ```bash
+      ls -la /proc/1/root/var/log/pods/
+      ```
+      ```bash
+      exit
+      ```
+ - Получить доступ к файловой системе ноды:
+    ```bash
+    kubectl debug node/minikube -it --image=busybox --profile=sysadmin
+    ```
+ - Прочесть логи интересующего контейнера:
+    ```bash
+    cat /proc/1/root/var/lib/docker/containers/<container_id>*/<container_id>-json.log
+    ```
+
+## Как проверить работоспособность:
+ - Обратиться к вэб серверу следующей командой:
+    ```bash
+    curl http://homework.otus
+    ```
+ - Убедиться что *tcpdump* отображает сетевые пакеты
+ - Прочесть логи интересующего контейнера:
+    ```bash
+    kubectl debug node/minikube -it --image=busybox --profile=sysadmin
+    ```
+    ```bash
+    cat /proc/1/root/var/lib/docker/containers/<container_id>*/<container_id>-json.log
+    ```
 
 </details>
 
 ---
+
+## ДЗ №14:
+
+<details><summary>Инструкция</summary>
+
+
+</details>
