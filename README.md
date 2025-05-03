@@ -1066,5 +1066,255 @@
 
 <details><summary>Инструкция</summary>
 
+## В процессе сделано:
+ - Создан сервисный аккаунт на *Яндекс Облаке*:
+    ```bash
+    SVC_ACCT="<service_account_name>"
+    ```
+    ```bash
+    FOLDER_ID=$(yc config get folder-id)
+    ```
+    ```bash
+    yc iam service-account create --name $SVC_ACCT --folder-id $FOLDER_ID
+    ```
+ - Выданы права сервисному аккаунту:
+    ```bash
+    ACCT_ID=$(yc iam service-account get $SVC_ACCT | grep ^id | awk '{print $2}')
+    ```
+    ```bash
+    yc resource-manager folder add-access-binding --id $FOLDER_ID --role admin --service-account-id $ACCT_ID
+    ```
+ - Получен IAM-токен для сервисного аккаунта:
+    ```bash
+    mkdir ~/keys
+    ```
+    ```bash
+    yc iam key create --service-account-name $SVC_ACCT --output ~/keys/key.json
+    ```
+ - Подготовлены *Terraform* манифесты для разворачивания 4 штук ВМ
+ - Написан скрипт **script.sh** для разворачивания кластера
+ - Статусы нодов кластера до и после обновления сохранены в файлы **kube-1_32.txt** и **kube-1_33.txt** соответственно
+
+## Как запустить проект:
+ - Склонировать репозиторий в локальное расположение, перейти в директорию с Terraform манифестами:
+    ```bash
+    git clone git@github.com:Kuber-2024-10OTUS/klimenko-sergey_repo.git
+    ```
+    ```bash
+    cd klimenko-sergey_repo/kubernetes-prod/terraform
+    ```
+ - Создать файл **terraform.tfvars** согласно шаблону **terraform.tfvars.example**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+ - Задать в **terraform.tfvars** значения перменным: *cloud_id*, *folder_id*, *public_key*, *service_account_key_file*, *sa_id*
+ - При необходимости актуализировать в **terraform.tfvars** переменную *image_id*, содержащую значение с *ID* образа ОС, запросив его командой:
+    ```bash
+    yc compute image get-latest-from-family debian-12 --folder-id standard-images
+    ```
+ - Запустить разворачивание ВМ на мощностях Яндекс Облака:
+    ```bash
+    terraform init
+    ```
+    ```bash
+    terraform apply
+    ```
+ - На мастере и всех нодах выполнить подготовку:
+    - Зайти на мастер:
+       ```bash
+       ssh -i ~/.ssh/<private_key> debian@<master_nat_ip>
+       ```
+    - Зайти на ноды:
+       ```bash
+       eval `ssh-agent -s`
+       ```
+       ```bash
+       ssh-add ~/.ssh/<private_key>
+       ```
+       ```bash
+       ssh -i ~/.ssh/<private_key> -A -J debian@<master_nat_ip> debian@<node_internal_ip>
+       ```
+    ```bash
+    sudo -i
+    ```
+    ```bash
+    apt update && apt upgrade -y
+    ```
+    ```bash
+    apt-get install -y apt-transport-https ca-certificates curl gpg
+    ```
+    ```bash
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    ```
+    ```bash
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    ```
+    ```bash
+    apt update
+    ```
+    ```bash
+    apt install -y kubelet kubeadm kubectl
+    ```
+    ```bash
+    apt-mark hold kubelet kubeadm kubectl
+    ```
+    ```bash
+    systemctl enable --now kubelet
+    ```
+    ```bash
+    cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+    net.ipv4.ip_forward = 1
+    EOF
+    ```
+    ```bash
+    sudo modprobe br_netfilter
+    ```
+    ```bash
+    sysctl --system
+    ```
+    ```bash
+    sysctl net.ipv4.ip_forward
+    ```
+    ```bash
+    cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+    overlay
+    br_netfilter
+    EOF
+    ```
+    ```bash
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    ```
+    ```bash
+    chmod a+r /etc/apt/keyrings/docker.asc
+    ```
+    ```bash
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    ```
+    ```bash
+    apt update
+    ```
+    ```bash
+    apt install -y containerd.io
+    ```
+    - Заменить значение ключа *SystemdCgroup* на *true*:
+      ```bash
+      containerd config default | tee /etc/containerd/config.toml
+      ```
+      ```bash
+      sed -e 's/SystemdCgroup = false/SystemdCgroup = true/g' -i /etc/containerd/config.toml
+      ```
+      ```bash
+      systemctl restart containerd
+      ```
+    ```bash
+    exit
+    ```
+ - На мастере создать кластер и подготовить к работе:
+    ```bash
+    sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+    ```
+    ```bash
+    mkdir -p $HOME/.kube
+    ```
+    ```bash
+    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    ```
+    ```bash
+    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    ```
+ - Добавить ноды к кластеру, выполнив на каждой команду присоединения:
+    ```bash
+    sudo kubeadm join 192.168.0.13:6443 --token <token> \
+        --discovery-token-ca-cert-hash <cert-hash>
+    ```
+ - Обновить класер до версии 1.33:
+    - На мастере выполнить:
+       ```bash
+       curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+       ```
+       ```bash
+       echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+       ```
+       ```bash
+       sudo apt update
+       ```
+       ```bash
+       sudo apt-cache madison kubeadm
+       ```
+       ```bash
+       sudo apt-mark unhold kubeadm && \
+       sudo apt-get update && sudo apt-get install -y kubeadm='1.33.0-1.1*' && \
+       sudo apt-mark hold kubeadm
+       ```
+       ```bash
+       sudo apt install psmisc
+       ```
+       ```bash
+       killall -s SIGTERM kube-apiserver
+       ```
+       ```bash
+       sudo kubeadm upgrade apply v1.33.0
+       ```
+       ```bash
+       kubectl drain master --ignore-daemonsets
+       ```
+       ```bash
+       sudo apt-mark unhold kubelet kubectl && \
+       sudo apt-get update && sudo apt-get install -y kubelet='1.33.0-1.1*' kubectl='1.33.0-1.1*' && \
+       sudo apt-mark hold kubelet kubectl
+       ```
+       ```bash
+       sudo systemctl daemon-reload
+       ```
+       ```bash
+       sudo systemctl restart kubelet
+       ```
+       ```bash
+       kubectl uncordon master
+       ```
+    - На рабочих нодах выполнить:
+       ```bash
+       curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+       ```
+       ```bash
+       echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+       ```
+       ```bash
+       sudo apt update
+       ```
+       ```bash
+       sudo apt-mark unhold kubeadm && \
+       sudo apt-get update && sudo apt-get install -y kubeadm='1.33.0-1.1*' && \
+       sudo apt-mark hold kubeadm
+       ```
+       ```bash
+       sudo kubeadm upgrade node
+       ```
+       - На мастере вывести из работы обновляемую ноду:
+          ```bash
+           kubectl drain <node_name> --ignore-daemonsets
+           ```
+       ```bash
+       sudo apt-mark unhold kubelet kubectl && \
+       sudo apt-get update && sudo apt-get install -y kubelet='1.33.0-1.1*' kubectl='1.33.0-1.1*' && \
+       sudo apt-mark hold kubelet kubectl
+       ```
+       ```bash
+       sudo systemctl daemon-reload
+       ```
+       ```bash
+       sudo systemctl restart kubelet
+       ```
+       - На мастере ввести в работу обновляемую ноду:
+          ```bash
+           kubectl uncordon <node_name>
+           ```
+
+## Как проверить работоспособность:
+ - Проверить наличие нодов в состоянии *Ready*, выполнив на мастере команду:
+    ```bash
+    kubectl get nodes -o wide
+    ```
 
 </details>
